@@ -1,0 +1,131 @@
+---
+title: "Ejercicios_cap_1"
+author: "Adrián Enríquez"
+date: "29/4/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Ejercicio 2.1
+
+Sea $(X,Y)$ un vector aleatorio con distribución uniforme en el cuadrado $[-1,1]\times [-1,1]$ de área $4$.
+
+a) Aproximar mediante simulación $P(X+Y\leq 0)$ y compararla con la probabilidad teórica.
+
+Primero calculemos la probabilidad teórica usando la regla de Laplace, para ello notemos en el siguiente gráfico que, el área de color verde representa el area favorable, mientras que el área posible esta dada por todo el cuadrado que es de 4.
+
+```{r, echo=FALSE}
+x1<-c(-1,1,1,-1)
+y1<-c(-1,-1,1,1)
+
+library(graphics)
+
+#gráfico
+plot(1, 1, col = "white", xlab = "X", ylab = "Y", xlim = c(-1,1), ylim = c(-1,1), asp = 1)   
+polygon(x=x1,y=y1,col = "#1b98e0")
+abline(a=0,b=-1)
+polygon(x=c(-1,1,-1),y=c(-1,-1,1), col = "#32CD32")
+
+
+```
+
+Por tanto, 
+
+\begin{align*}
+P(X+Y\leq 0)&=\frac{\text{Área favorable}}{\text{Área posible}}\\
+            &=\frac{2}{4}\\
+            &=\frac{1}{2}
+\end{align*}
+
+Ahora, aproximemos el valor de la probabilidad usando simulación, con lo cual generamos 1000 valores aleatorios entre $-1$ y $1$ para $X$ e $Y$
+
+```{r}
+set.seed(610)
+nsim=1000
+x<-runif(nsim,-1,1)
+y<-runif(nsim,-1,1)
+
+plot(x,y)
+```
+
+Una vez que ya hemos generado los valores, determinemos la probabilidad aproximada, para ello, determinemos cuantos puntos $X,Y$ que determinan que $X+Y\leq 0$
+
+```{r}
+cont<-x+y<=0 # vector booleano que tiene true si se cumple que x+y<=0 y false si no
+
+prob_aprox<-length(cont[cont==TRUE])/length(cont)
+```
+
+Con lo cual, la probabilidad aproximada es
+
+```{r}
+prob_aprox
+```
+
+b) Aproximar el valor de $\pi$ mediante simulación a partir de $P(X^2+Y^2\leq 1)$
+
+Recordemos que el área de un círculo viene dada por $A=\pi\cdot r^2$, como en este caso, el círculo tiene radio $r=1$, entonces
+$$
+A=\pi
+$$
+Y como podemos notar, en el siguiente gráfico, el área favorable es el área del círculo y el área posible es el área de todo el cuadrado
+
+```{r, echo=FALSE}
+x1<-c(-1,1,1,-1)
+y1<-c(-1,-1,1,1)
+
+library(graphics)
+
+#gráfico
+plot(c(-1,1), c(-1,1), type = "n", xlab = "X", ylab = "Y", asp = 1)   
+polygon(x=x1,y=y1,col = "#1b98e0")
+theta <- seq(0, 2 * pi, length = 200)
+polygon(x=cos(theta), y=sin(theta), col = "#32CD32", lwd = 3)
+
+
+```
+
+Por tanto, la probabilidad teórica es:
+
+\begin{align*}
+P(X^2+Y^2\leq 1)&=\frac{\text{Área favorable}}{\text{Área posible}}\\
+            &=\frac{\pi}{4}
+\end{align*}
+
+Con lo cual
+$$
+\pi=4\cdot P(X^2+Y^2 \leq 1)
+$$
+
+Por tanto, para aproximar el valor de $\pi$ usemos simulación para aproximar el valor de $P(X^2+Y^2\leq 1)$, así, de la misma manera que en el literal anterior generemos valores para $X$ e $Y$
+
+```{r}
+nsim<-10000
+
+x<-runif(nsim,-1,1)
+y<-runif(nsim,-1,1)
+
+color=ifelse(x^2+y^2<=1,"black","red")
+simbolo<-ifelse(x^2+y^2<=1,1,4)
+plot(x,y,pch=simbolo,col=color, asp=1)
+
+```
+
+Con lo cual, el valor de $\pi$ aproximado es
+
+```{r}
+cont<-x^2+y^2<=1
+
+proba_aprox<-mean(cont)
+
+aprox_pi<-proba_aprox*4
+aprox_pi
+```
+
+
+
+
+
