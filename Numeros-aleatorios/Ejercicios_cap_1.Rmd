@@ -9,7 +9,9 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Ejercicio 2.1
+# Generación de números pseudoaleatorios en R
+
+## Ejercicio 1.1
 
 Sea $(X,Y)$ un vector aleatorio con distribución uniforme en el cuadrado $[-1,1]\times [-1,1]$ de área $4$.
 
@@ -125,7 +127,160 @@ aprox_pi<-proba_aprox*4
 aprox_pi
 ```
 
+## Ejercicio 1.2
 
+Consideramos el experimento de Bernoulli consistente en el lanzamiento de una moneda.
+
+a) Empleando la función sample, obtener 1000 simulaciones del lanzamiento de una moneda
+(0 = "cruz", 1 = "cara"), suponiendo que no está trucada. Aproximar la probabilidad de cara a partir de las simulaciones.
+
+```{r}
+set.seed(610)
+nsim<-1000
+x<-sample(c("cruz"=0,"cara"=1),size = nsim,replace = TRUE,prob = c(0.5,0.5))
+mean(x)
+barplot(100*table(x)/nsim,ylab = "Porcentajes")
+```
+
+b) En R pueden generarse valores de la distribución de Bernoulli mediante la función rbinom(nsim, size=1, prob). Generar un gráfico de lineas considerando en el eje X el número de lanzamientos (de 1 a 1000) y en el eje Y la frecuencia relativa del suceso cara (puede ser recomendable emplear la función cumsum).
+
+```{r}
+set.seed(610)
+nsim<-1000
+p<-0.4 # probabilidad del suceso cara
+x<-rbinom(nsim,size = 1,p) # Simulación de una Bernoulli
+mean(x)
+
+n<-1:nsim
+plot(n,cumsum(x)/n,type = "l",ylim = c(0,1),xlab = "Número de lanzamientos", ylab = "Proporción de caras")
+abline(h=p, lty = 2,col="green")
+```
+
+## Ejercicio 1.3
+
+Simular el paso de corriente a través del siguiente circuito, donde figuran las probabilidades de
+que pase corriente por cada uno de los interruptores:
+
+<div align="center">
+  <img src="Images/circuito.jpg" width="350px" height= "300px">
+</div>
+
+Considerar que cada interruptor es una v.a. de Bernoulli independiente para simular 1000
+valores de cada una de ellas.
+
+```{r}
+set.seed(610)
+
+nsim<-1000
+
+x1<-rbinom(nsim,size = 1, 0.8) #Interruptor 1
+x2<-rbinom(nsim,size = 1, 0.9) # Interruptor 2
+
+z1<- x1 | x2 # la corriente pasa por 1 o 2
+
+x3<-rbinom(nsim, size = 1, 0.6)
+x4<-rbinom(nsim, size = 1, 0.5)
+
+z2<- x3 | x4
+
+x5<-rbinom(nsim, size = 1, 0.7)
+
+z3<- z1 | z2
+
+pasa_cor<- z3 & x5
+
+mean(pasa_cor)
+```
+
+## Ejercico 1.4
+
+En 1651, el Caballero de Méré le planteó a Pascal una pregunta relacionada con las apuestas y los juegos de azar: ¿es ventajoso apostar a que en cuatro lanzamientos de un dado se obtiene al menos un seis? Este problema generó una fructífera correspondencia entre Pascal y Fermat que se considera, simbólicamente, como el nacimiento del Cálculo de Probabilidades.
+
+a) Escribir una función que simule el lanzamiento de $n$ dados. El parámetro de entrada es el número de lanzamientos $n$, que toma el valor 4 por defecto, y la salida debe ser TRUE si se obtiene al menos un 6 y FALSE en caso contrario.
+
+```{r}
+lanzamiento_dado<-function(n=4)
+{
+  num_dado<-sample(1:6,n,replace = TRUE)
+  return(6 %in% num_dado)
+}
+
+#Uso de función
+lanz<-lanzamiento_dado()
+lanz
+```
+
+b) Utilizar la función anterior para simular nsim = 10000 jugadas de este juego y calcular la proporción de veces que se gana la apuesta (obtener al menos un 6 en n lanzamientos), usando n = 4. Comparar el resultado con la probabilidad teórica $1-(5/6)^n$.
+
+```{r}
+set.seed(610)
+nsim<-10000
+resultados<-replicate(nsim,lanzamiento_dado(n = 4))
+```
+
+La probabilidad teórica de ganara la apuesta es
+
+```{r}
+prob_teor<-1-(5/6)^4
+prob_teor
+```
+
+Mientras que la aproximada por simulación es
+
+```{r}
+prob_aprox<-mean(resultados)
+prob_aprox
+```
+
+# Análisis de la calidad de un generador
+
+Considera el generador congruencial definido por:
+
+\begin{align*}
+  x_{n+1}&=(5x_n+1)\mod 512\\
+  u_{n+1}&=\frac{x_{n+1}}{512},\hspace{0.3 cm} n=0,1,\ldots
+\end{align*}
+(de ciclo máximo).
+
+a) Generar 500 valores de este generador (utilizar el algoritmo implementado en el fichero RANDC.R), obtener el tiempo de CPU, representar su distribución mediante un histograma (en escala de densidades) y compararla con la densidad teórica.
+
+```{r}
+source("Functions/RANDC.R")
+initRANDC(610,a=5,c=1, m=512)
+nsim<-500
+
+#Obtención del tiempo de CPU
+system.time(u<-RANDCN(n=nsim))
+
+#Representación en un histograma
+hist(u,freq = FALSE)
+abline(h=1) # densidad teórica
+```
+
+b) Calcular la media de las simulaciones (mean) y compararla con la teórica.
+
+La media de las simulaciones es
+```{r}
+mean(u)
+```
+Mientras que la media teórica es $0.5$
+
+c) Aproximar (mediante simulación) la probabilidad del intervalo $(0.4; 0.8)$ y compararla con la teórica.
+
+La probabilidad teórica es: $0.8-0.4=0.4$; Mientras que la aproximada es:
+```{r}
+mean(u<0.8 & u>0.4)
+```
+
+d) Realizar el contraste de Kolmogorov-Smirnov para estudiar el ajuste a una $\mathcal{U}(0,1)$
+
+El test de Kolmogorov-Smirnov se lo puede realizar usando la función ks.test, entonces
+
+```{r}
+ks.test(u,punif)
+```
+
+Obtenemos que $p-value\geq 1-\alpha$ con $\alpha=0.05$, por tanto, este generador no reproduce adecuadamente la variabilidad.
 
 
 
